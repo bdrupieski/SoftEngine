@@ -1,7 +1,9 @@
 ﻿{
   "dependencies": {
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
-    "SharpDX": "3.1.1"
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.2.2",
+    "Newtonsoft.Json": "9.0.1",
+    "SharpDX": "3.1.1",
+    "SharpDX.Mathematics": "3.1.1"
   },
   "frameworks": {
     "uap10.0": {}
