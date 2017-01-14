@@ -10,13 +10,20 @@ namespace SoftEngine
     public class Device
     {
         private readonly byte[] _backBuffer;
+        private readonly float[] _depthBuffer;
         private readonly WriteableBitmap _bmp;
+        private readonly int _renderWidth;
+        private readonly int _renderHeight;
 
         public Device(WriteableBitmap bmp)
         {
             _bmp = bmp;
+            _renderWidth = bmp.PixelWidth;
+            _renderHeight = bmp.PixelHeight;
+
             // width * height * (R,G,B,A)
             _backBuffer = new byte[bmp.PixelWidth * bmp.PixelHeight * 4];
+            _depthBuffer = new float[bmp.PixelWidth * bmp.PixelHeight];
         }
 
         public void Clear(byte r, byte g, byte b, byte a)
@@ -27,6 +34,12 @@ namespace SoftEngine
                 _backBuffer[i + 1] = g;
                 _backBuffer[i + 2] = r;
                 _backBuffer[i + 3] = a;
+            }
+
+            // Clearing Depth Buffer
+            for (var index = 0; index < _depthBuffer.Length; index++)
+            {
+                _depthBuffer[index] = float.MaxValue;
             }
         }
 
@@ -40,17 +53,25 @@ namespace SoftEngine
         }
 
         // Called to put a pixel on screen at a specific X,Y coordinates
-        private void PutPixel(int x, int y, Color4 color)
+        private void PutPixel(int x, int y, float z, Color4 color)
         {
             // As we have a 1-D Array for our back buffer
             // we need to know the equivalent cell in 1-D based
             // on the 2D coordinates on screen
-            var index = (x + y * _bmp.PixelWidth) * 4;
+            var index = x + y * _renderWidth;
+            var index4 = index * 4;
 
-            _backBuffer[index] = (byte) (color.Blue * 255);
-            _backBuffer[index + 1] = (byte) (color.Green * 255);
-            _backBuffer[index + 2] = (byte) (color.Red * 255);
-            _backBuffer[index + 3] = (byte) (color.Alpha * 255);
+            if (_depthBuffer[index] < z)
+            {
+                return; // Discard
+            }
+
+            _depthBuffer[index] = z;
+
+            _backBuffer[index4] = (byte)(color.Blue * 255);
+            _backBuffer[index4 + 1] = (byte)(color.Green * 255);
+            _backBuffer[index4 + 2] = (byte)(color.Red * 255);
+            _backBuffer[index4 + 3] = (byte)(color.Alpha * 255);
         }
 
         // Project takes some 3D coordinates and transform them
@@ -68,13 +89,13 @@ namespace SoftEngine
         }
 
         // DrawPoint calls PutPixel but does the clipping operation before
-        private void DrawPoint(Vector2 point, Color4 color)
+        private void DrawPoint(Vector3 point, Color4 color)
         {
             // Clipping what's visible on screen
             if (point.X >= 0 && point.Y >= 0 && point.X < _bmp.PixelWidth && point.Y < _bmp.PixelHeight)
             {
                 // Drawing a point
-                PutPixel((int)point.X, (int)point.Y, color);
+                PutPixel((int)point.X, (int)point.Y, point.Z, color);
             }
         }
 
@@ -206,10 +227,17 @@ namespace SoftEngine
             int sx = (int)Interpolate(pa.X, pb.X, gradient1);
             int ex = (int)Interpolate(pc.X, pd.X, gradient2);
 
+            // starting Z & ending Z
+            float z1 = Interpolate(pa.Z, pb.Z, gradient1);
+            float z2 = Interpolate(pc.Z, pd.Z, gradient2);
+
             // drawing a line from left (sx) to right (ex) 
             for (var x = sx; x < ex; x++)
             {
-                DrawPoint(new Vector2(x, y), color);
+                float gradient = (x - sx) / (float)(ex - sx);
+
+                var z = Interpolate(z1, z2, gradient);
+                DrawPoint(new Vector3(x, y, z), color);
             }
         }
 
