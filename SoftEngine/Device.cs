@@ -101,11 +101,19 @@ namespace SoftEngine
                     DrawPoint(point);
                 }
 
-                for (var i = 0; i < mesh.Vertices.Length - 1; i++)
+                foreach (var face in mesh.Faces)
                 {
-                    var point0 = Project(mesh.Vertices[i], transformMatrix);
-                    var point1 = Project(mesh.Vertices[i + 1], transformMatrix);
-                    DrawLine(point0, point1);
+                    var vertexA = mesh.Vertices[face.A];
+                    var vertexB = mesh.Vertices[face.B];
+                    var vertexC = mesh.Vertices[face.C];
+
+                    var pixelA = Project(vertexA, transformMatrix);
+                    var pixelB = Project(vertexB, transformMatrix);
+                    var pixelC = Project(vertexC, transformMatrix);
+
+                    DrawLine(pixelA, pixelB);
+                    DrawLine(pixelB, pixelC);
+                    DrawLine(pixelC, pixelA);
                 }
             }
         }
