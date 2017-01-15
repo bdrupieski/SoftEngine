@@ -41,7 +41,7 @@ namespace SoftEngine
             foreach (var mesh in _meshes)
             {
                 // rotating slightly the meshes during each frame rendered
-                mesh.Rotation = new Vector3(mesh.Rotation.X + 0.01f, mesh.Rotation.Y + 0.01f, mesh.Rotation.Z);
+                mesh.Rotation = new Vector3(mesh.Rotation.X, mesh.Rotation.Y + 0.01f, mesh.Rotation.Z);
             }
 
             // Doing the various matrix operations
